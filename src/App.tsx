@@ -7,7 +7,7 @@ import JobCards from './pages/JobCards';
 import Settings from './pages/Settings';
 import PartyLedger from './pages/PartyLedger';
 import Login from './pages/Login';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 

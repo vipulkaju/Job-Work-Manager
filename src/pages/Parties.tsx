@@ -19,9 +19,9 @@ export default function Parties() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const filteredParties = state.parties.filter(p => {
+  const filteredParties = React.useMemo(() => state.parties.filter(p => {
     return p.name.toLowerCase().includes(search.toLowerCase());
-  });
+  }), [state.parties, search]);
 
   const handleEdit = (party: Party) => {
     setEditingParty(party);

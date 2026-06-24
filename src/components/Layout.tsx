@@ -72,14 +72,14 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-28 md:pb-0 bg-slate-50/50 dark:bg-black/50">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-0 bg-slate-50/50 dark:bg-black/50">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>
         </main>
 
         {/* Bottom Navigation (Mobile Only) */}
-        <nav className="md:hidden absolute bottom-0 left-0 right-0 flex h-20 items-center justify-around border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl px-4 pb-safe z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
+        <nav className="md:hidden absolute bottom-0 left-0 right-0 flex h-[72px] items-center justify-around border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-xl px-2 pb-2 pt-1 z-40 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
           <NavItem to="/" icon={<Home className="h-6 w-6" />} label={t.dashboard} />
           <NavItem to="/parties" icon={<Users className="h-6 w-6" />} label={t.parties} />
           <NavItem to="/jobcards" icon={
@@ -119,7 +119,7 @@ function NavItem({ to, icon, label, isFab }: { to: string; icon: React.ReactNode
       to={to}
       className={({ isActive }) =>
         cn(
-          'flex flex-col items-center justify-center gap-1 p-2 text-[10px] font-semibold tracking-wide transition-all',
+          'flex flex-col items-center justify-center gap-1 min-w-[64px] flex-1 text-[10px] font-semibold tracking-wide transition-all',
           isFab ? '' : isActive
             ? 'text-emerald-500 dark:text-emerald-400'
             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'

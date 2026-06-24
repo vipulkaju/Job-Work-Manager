@@ -15,10 +15,10 @@ export default function JobCards() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const filteredCards = state.jobCards.filter(c => 
+  const filteredCards = useMemo(() => state.jobCards.filter(c => 
     c.cardNumber.toLowerCase().includes(search.toLowerCase()) || 
     c.designName.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [state.jobCards, search]);
 
   const paymentStatuses = useMemo(() => getJobCardPaymentStatuses(state.jobCards, state.payments || [], state.parties), [state.jobCards, state.payments, state.parties]);
 

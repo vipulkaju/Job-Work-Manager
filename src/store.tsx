@@ -34,7 +34,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('jobwork_db');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...INITIAL_STATE, ...parsed };
+        return { 
+          ...INITIAL_STATE, 
+          language: parsed.language || 'gu',
+          theme: parsed.theme || 'dark'
+        };
       }
       return INITIAL_STATE;
     } catch (e) {
@@ -44,13 +48,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Load preferences and save to localStorage
   useEffect(() => {
-    localStorage.setItem('jobwork_db', JSON.stringify(state));
+    localStorage.setItem('jobwork_db', JSON.stringify({
+      language: state.language,
+      theme: state.theme
+    }));
     if (state.theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [state]);
+  }, [state.language, state.theme]);
 
   // Real-time sync from Firestore
   useEffect(() => {
@@ -70,16 +77,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const items = snapshot.docs.map(doc => doc.data() as T);
         if (sortFn) items.sort(sortFn);
         
-        // Only update state if we received data, or if we already have data from firebase
-        // This prevents overwriting local storage with empty arrays if firebase fails to load
-        setState(s => {
-          // If firebase returned nothing, but we have local data, keep local data for now
-          // unless the user explicitly deleted everything.
-          if (items.length === 0 && (s[key] as any[]).length > 0) {
-            return s; // Keep existing data
-          }
-          return { ...s, [key]: items };
-        });
+        setState(s => ({ ...s, [key]: items }));
       }, (error) => {
         console.error(`Firebase error for ${collectionName}:`, error);
       });
@@ -87,9 +85,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        unsubParties = handleSnapshot<Party>('parties', 'parties', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
-        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
-        unsubPayments = handleSnapshot<Payment>('payments', 'payments', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
+        unsubParties = handleSnapshot<Party>('parties', 'parties', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        unsubPayments = handleSnapshot<Payment>('payments', 'payments', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       } else {
         if (unsubParties) unsubParties();
         if (unsubJobCards) unsubJobCards();

@@ -4,7 +4,7 @@ import { ArrowLeft, Download, FileText, Share2, Trash2 } from 'lucide-react';
 import { useStore } from '../store';
 import { translations } from '../i18n';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { cn } from '../lib/utils';
 import { getJobCardPaymentStatuses } from '../lib/payment-utils';
@@ -117,7 +117,7 @@ export default function PartyLedger() {
       ];
     });
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: fromDate || toDate ? 25 : 20,
       head: [['Date', 'Description', 'Debit', 'Credit', 'Balance']],
       body: tableData,
@@ -215,7 +215,7 @@ export default function PartyLedger() {
       </div>
       
       {/* Transactions List */}
-      <div className="space-y-4 pb-24 md:pb-8">
+      <div className="space-y-4 pb-4 md:pb-8">
         {transactions.length === 0 ? (
           <div className="flex h-40 items-center justify-center text-slate-500 dark:text-slate-400">{t.noData}</div>
         ) : (

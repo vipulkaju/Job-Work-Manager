@@ -8,20 +8,24 @@ export default function Dashboard() {
   const { state } = useStore();
   const t = translations[state.language];
 
-  const totalParties = state.parties.length;
-  const totalJobCards = state.jobCards.length;
-  const pendingDispatch = state.jobCards.filter(c => c.status === 'Completed').length; // Mocking dispatch as completed
-  const totalBilled = state.jobCards.reduce((acc, card) => {
-    const party = state.parties.find(p => p.id === card.partyId);
-    const discountAmt = card.amount * (party?.discount || 0) / 100;
-    const dalaliAmt = card.amount * (party?.dalali || 0) / 100;
-    return acc + (card.amount - discountAmt - dalaliAmt);
-  }, 0);
-  const totalPaid = (state.payments || []).reduce((acc, pay) => acc + pay.amount + (pay.discount || 0), 0);
-  const outstanding = totalBilled - totalPaid;
+  const { totalParties, totalJobCards, pendingDispatch, outstanding } = React.useMemo(() => {
+    const totalParties = state.parties.length;
+    const totalJobCards = state.jobCards.length;
+    const pendingDispatch = state.jobCards.filter(c => c.status === 'Completed').length;
+    const totalBilled = state.jobCards.reduce((acc, card) => {
+      const party = state.parties.find(p => p.id === card.partyId);
+      const discountAmt = card.amount * (party?.discount || 0) / 100;
+      const dalaliAmt = card.amount * (party?.dalali || 0) / 100;
+      return acc + (card.amount - discountAmt - dalaliAmt);
+    }, 0);
+    const totalPaid = (state.payments || []).reduce((acc, pay) => acc + pay.amount + (pay.discount || 0), 0);
+    const outstanding = totalBilled - totalPaid;
+
+    return { totalParties, totalJobCards, pendingDispatch, outstanding };
+  }, [state.parties, state.jobCards, state.payments]);
 
   return (
-    <div className="flex flex-col gap-6 p-6 font-sans">
+    <div className="flex flex-col gap-4 md:gap-6 p-4 md:p-6 font-sans pb-24">
       {/* Header */}
       <div className="pt-6 pb-2">
         <h1 className="text-3xl font-display font-bold tracking-tight text-slate-900 dark:text-white">
@@ -69,8 +73,8 @@ export default function Dashboard() {
 
       {/* Recent Activity or Chart Placeholder */}
       <div className="mt-4 rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#12141a] p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-display font-bold text-slate-900 dark:text-white">{t.monthlyStats}</h2>
-        <div className="flex h-32 items-end justify-between gap-2 px-2">
+        <h2 className="mb-6 text-center text-lg font-display font-bold text-slate-900 dark:text-white">{t.monthlyStats}</h2>
+        <div className="flex h-32 max-w-md mx-auto items-end justify-center gap-4 px-2">
           {/* Mockup Chart bars */}
           {[40, 65, 55, 90, 45, 30, 60, 75].map((height, i) => (
             <div
