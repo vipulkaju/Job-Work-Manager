@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, Users, FileText, Settings as SettingsIcon, Package } from 'lucide-react';
+import { Home, Users, FileText, Settings as SettingsIcon, Package, Wifi, WifiOff } from 'lucide-react';
 import { useStore } from '../store';
 import { translations } from '../i18n';
 import { cn } from '../lib/utils';
@@ -8,6 +8,20 @@ import { cn } from '../lib/utils';
 export default function Layout() {
   const { state } = useStore();
   const t = translations[state.language];
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <div className="flex h-[100dvh] w-full bg-slate-50 text-slate-900 dark:bg-[#09090b] dark:text-slate-200 transition-colors duration-300 font-sans overflow-hidden">
@@ -19,6 +33,13 @@ export default function Layout() {
             <Package className="h-5 w-5" />
           </div>
           <span className="font-display font-bold text-lg tracking-tight">JobWork Pro</span>
+          <div className="ml-auto" title={isOnline ? "Online" : "Offline"}>
+            {isOnline ? (
+              <Wifi className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-rose-500" />
+            )}
+          </div>
         </div>
         
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
@@ -34,6 +55,23 @@ export default function Layout() {
 
       {/* Mobile-first layout wrapper (Fallback for small screens) / Main Content Area (Desktop) */}
       <div className="flex flex-1 flex-col overflow-hidden relative">
+        {/* Mobile Header */}
+        <header className="md:hidden flex h-14 items-center justify-between px-4 bg-white dark:bg-[#12141a] border-b border-slate-200 dark:border-white/10 z-10">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500 text-white shadow-sm">
+              <Package className="h-4 w-4" />
+            </div>
+            <span className="font-display font-bold text-sm tracking-tight">JobWork Pro</span>
+          </div>
+          <div title={isOnline ? "Online" : "Offline"}>
+            {isOnline ? (
+              <Wifi className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-rose-500" />
+            )}
+          </div>
+        </header>
+
         <main className="flex-1 overflow-y-auto pb-24 md:pb-0 bg-slate-50/50 dark:bg-black/50">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
