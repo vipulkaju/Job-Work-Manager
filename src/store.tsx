@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AppState, JobCard, Party, Payment } from './types';
-import { collection, doc, onSnapshot, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { db, auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -64,7 +64,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       key: keyof AppState,
       sortFn?: (a: T, b: T) => number
     ) => {
-      return onSnapshot(collection(db, collectionName), (snapshot) => {
+      const q = query(collection(db, collectionName), where("userId", "==", auth.currentUser?.uid));
+      return onSnapshot(q, (snapshot) => {
         if (!isSubscribed) return;
         const items = snapshot.docs.map(doc => doc.data() as T);
         if (sortFn) items.sort(sortFn);
@@ -110,12 +111,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addParty = async (party: Party) => {
     setState(s => ({ ...s, parties: [party, ...s.parties] }));
-    try { await setDoc(doc(db, 'parties', party.id), party); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, 'parties', party.id), { ...party, userId: auth.currentUser?.uid }); } catch(e) { console.error(e); }
   };
 
   const updateParty = async (party: Party) => {
     setState(s => ({ ...s, parties: s.parties.map(p => p.id === party.id ? party : p) }));
-    try { await setDoc(doc(db, 'parties', party.id), party); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, 'parties', party.id), { ...party, userId: auth.currentUser?.uid }); } catch(e) { console.error(e); }
   };
 
   const deleteParty = async (id: string) => {
@@ -134,12 +135,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addJobCard = async (card: JobCard) => {
     setState(s => ({ ...s, jobCards: [card, ...s.jobCards] }));
-    try { await setDoc(doc(db, 'jobCards', card.id), card); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, 'jobCards', card.id), { ...card, userId: auth.currentUser?.uid }); } catch(e) { console.error(e); }
   };
 
   const updateJobCard = async (card: JobCard) => {
     setState(s => ({ ...s, jobCards: s.jobCards.map(c => c.id === card.id ? card : c) }));
-    try { await setDoc(doc(db, 'jobCards', card.id), card); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, 'jobCards', card.id), { ...card, userId: auth.currentUser?.uid }); } catch(e) { console.error(e); }
   };
 
   const deleteJobCard = async (id: string) => {
@@ -149,7 +150,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addPayment = async (payment: Payment) => {
     setState(s => ({ ...s, payments: [payment, ...(s.payments || [])] }));
-    try { await setDoc(doc(db, 'payments', payment.id), payment); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, 'payments', payment.id), { ...payment, userId: auth.currentUser?.uid }); } catch(e) { console.error(e); }
   };
 
   const deletePayment = async (id: string) => {
