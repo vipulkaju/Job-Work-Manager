@@ -25,7 +25,7 @@ export function getJobCardPaymentStatuses(jobCards: JobCard[], payments: Payment
           if (remainingPayAmt <= 0) break;
           if (jcPaidMap.has(jid)) {
             const jc = partyJCs.find(j => j.id === jid)!;
-            const finalAmount = jc.amount - (jc.amount * discount / 100) - (jc.amount * dalali / 100);
+            const finalAmount = jc.amount - Math.floor(jc.amount * discount / 100) - Math.floor(jc.amount * dalali / 100);
             const currentlyPaid = jcPaidMap.get(jid)!;
             const due = finalAmount - currentlyPaid;
             if (due > 0) {
@@ -44,7 +44,7 @@ export function getJobCardPaymentStatuses(jobCards: JobCard[], payments: Payment
     });
     
     for (const jc of partyJCs) {
-      const finalAmount = jc.amount - (jc.amount * discount / 100) - (jc.amount * dalali / 100);
+      const finalAmount = jc.amount - Math.floor(jc.amount * discount / 100) - Math.floor(jc.amount * dalali / 100);
 
       let paidSoFar = jcPaidMap.get(jc.id)!;
       let remainingToPay = finalAmount - paidSoFar;

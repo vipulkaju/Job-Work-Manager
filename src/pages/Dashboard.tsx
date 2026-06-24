@@ -14,8 +14,8 @@ export default function Dashboard() {
     const pendingDispatch = state.jobCards.filter(c => c.status === 'Completed').length;
     const totalBilled = state.jobCards.reduce((acc, card) => {
       const party = state.parties.find(p => p.id === card.partyId);
-      const discountAmt = card.amount * (party?.discount || 0) / 100;
-      const dalaliAmt = card.amount * (party?.dalali || 0) / 100;
+      const discountAmt = Math.floor(card.amount * (party?.discount || 0) / 100);
+      const dalaliAmt = Math.floor(card.amount * (party?.dalali || 0) / 100);
       return acc + (card.amount - discountAmt - dalaliAmt);
     }, 0);
     const totalPaid = (state.payments || []).reduce((acc, pay) => acc + pay.amount + (pay.discount || 0), 0);
@@ -64,7 +64,7 @@ export default function Dashboard() {
         <StatCard
           icon={<IndianRupee className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
           label={t.outstandingAmount}
-          value={`₹${outstanding.toLocaleString('en-IN')}`}
+          value={`₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-900/50 shadow-sm"
           valueClass="text-emerald-700 dark:text-emerald-400 font-display"
           labelClass="text-emerald-800/70 dark:text-emerald-500/70"

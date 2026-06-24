@@ -87,7 +87,14 @@ export default function JobCards() {
               const pStatus = paymentStatuses.get(card.id);
               
               return (
-                <div key={card.id} className="rounded-[1.5rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-[#12141a] p-5 shadow-sm hover:shadow-md transition-all duration-300 group">
+                <div key={card.id} className={cn(
+                  "rounded-[1.5rem] border p-5 shadow-sm hover:shadow-md transition-all duration-300 group",
+                  pStatus?.status === 'Paid' 
+                    ? "border-emerald-500/50 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-500/10" 
+                    : pStatus?.status === 'Partial'
+                    ? "border-amber-500/50 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10"
+                    : "border-slate-200/60 dark:border-white/10 bg-white dark:bg-[#12141a]"
+                )}>
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-xs mb-1 tracking-wider">#{card.cardNumber}</h3>
@@ -103,7 +110,7 @@ export default function JobCards() {
                         </button>
                       </div>
                       <a 
-                        href={`https://wa.me/?text=${encodeURIComponent(`*Job Card*: ${card.cardNumber}\n*Party*: ${partyName}\n*Design*: ${card.designName}\n*Qty*: ${card.quantity}\n*Amount*: ₹${card.amount}\n*Status*: ${card.status}`)}`}
+                        href={`https://wa.me/?text=${encodeURIComponent(`*Job Card*: ${card.cardNumber}\n*Party*: ${partyName}\n*Design*: ${card.designName}\n*Qty*: ${card.quantity}\n*Amount*: ₹${Number(card.amount).toFixed(2)}\n*Status*: ${card.status}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-500/20 shadow-sm"
@@ -140,13 +147,13 @@ export default function JobCards() {
                     <div>
                       <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">{t.amount}</span>
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-900 dark:text-white">₹{card.amount}</span>
+                        <span className="font-medium text-slate-900 dark:text-white">₹{Number(card.amount).toFixed(2)}</span>
                         {pStatus && pStatus.status !== 'Unpaid' && (
                           <span className={cn(
                             "text-[10px] font-bold uppercase tracking-wider mt-0.5",
                             pStatus.status === 'Paid' ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-500"
                           )}>
-                            {pStatus.status === 'Paid' ? t.paid : `${t.partial} (₹${pStatus.due})`}
+                            {pStatus.status === 'Paid' ? t.paid : `${t.partial} (₹${Number(pStatus.due).toFixed(2)})`}
                           </span>
                         )}
                       </div>
@@ -207,7 +214,7 @@ function JobCardModal({ onClose, onSave, initialCard, t, parties }: { onClose: (
     
     const qty = parseFloat(formData.quantity) || 0;
     const rate = parseFloat(formData.rate) || 0;
-    const baseAmount = qty * rate;
+    const baseAmount = Math.floor(qty * rate);
     let finalAmount = baseAmount;
     
     const selectedParty = parties.find(p => p.id === formData.partyId);

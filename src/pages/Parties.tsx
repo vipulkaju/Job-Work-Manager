@@ -87,10 +87,11 @@ export default function Parties() {
             {filteredParties.map(party => {
               const partyJobCards = state.jobCards.filter(c => c.partyId === party.id);
               const partyPayments = (state.payments || []).filter(p => p.partyId === party.id);
-              const totalBilledRaw = partyJobCards.reduce((acc, c) => acc + c.amount, 0);
-              const discountAmt = totalBilledRaw * (party.discount || 0) / 100;
-              const dalaliAmt = totalBilledRaw * (party.dalali || 0) / 100;
-              const totalBilled = totalBilledRaw - discountAmt - dalaliAmt;
+              const totalBilled = partyJobCards.reduce((acc, c) => {
+                const discountAmt = Math.floor(c.amount * (party.discount || 0) / 100);
+                const dalaliAmt = Math.floor(c.amount * (party.dalali || 0) / 100);
+                return acc + (c.amount - discountAmt - dalaliAmt);
+              }, 0);
               const totalPaid = partyPayments.reduce((acc, p) => acc + p.amount + (p.discount || 0), 0);
               const balance = totalBilled - totalPaid;
 
@@ -106,7 +107,7 @@ export default function Parties() {
                   </div>
                   <div className="flex flex-col items-end gap-3">
                     <span className={cn("text-lg font-display font-bold px-3 py-1 rounded-xl", balance > 0 ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-500 border border-amber-200/50 dark:border-amber-500/20" : balance < 0 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-500 border border-emerald-200/50 dark:border-emerald-500/20" : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-white/10")}>
-                      ₹{Math.abs(balance)} <span className="text-[10px] tracking-wider uppercase opacity-80">{balance > 0 ? 'Dr' : balance < 0 ? 'Cr' : ''}</span>
+                      ₹{Math.abs(balance).toFixed(2)} <span className="text-[10px] tracking-wider uppercase opacity-80">{balance > 0 ? 'Dr' : balance < 0 ? 'Cr' : ''}</span>
                     </span>
                     <div className="flex items-center gap-1 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 bg-slate-50 dark:bg-white/5 rounded-full p-1 border border-slate-100 dark:border-white/5">
                       <button onClick={(e) => { e.stopPropagation(); openPayment(party); }} className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 p-2 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors shadow-sm" title={t.addPayment}>
@@ -258,7 +259,7 @@ function PaymentModal({ party, onClose, onSave, t }: { party: Party, onClose: ()
                         #{jc.cardNumber} - {jc.designName}
                       </span>
                       <span className="text-xs font-bold text-amber-600 dark:text-amber-500">
-                        ₹{due}
+                        ₹{due.toFixed(2)}
                       </span>
                     </label>
                   );

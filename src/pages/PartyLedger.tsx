@@ -54,8 +54,8 @@ export default function PartyLedger() {
     }
 
     const jcTr = jobCards.map(c => {
-      const discountAmt = c.amount * (party.discount || 0) / 100;
-      const dalaliAmt = c.amount * (party.dalali || 0) / 100;
+      const discountAmt = Math.floor(c.amount * (party.discount || 0) / 100);
+      const dalaliAmt = Math.floor(c.amount * (party.dalali || 0) / 100);
       return {
         id: c.id,
         type: 'jobCard' as const,
@@ -71,7 +71,7 @@ export default function PartyLedger() {
       id: p.id,
       type: 'payment' as const,
       date: p.date,
-      desc: `Payment (${p.mode}) ${p.remark ? '- ' + p.remark : ''}${p.discount ? ` [Kasar: ₹${p.discount}]` : ''}`,
+      desc: `Payment (${p.mode}) ${p.remark ? '- ' + p.remark : ''}${p.discount ? ` [Kasar: ₹${Number(p.discount).toFixed(2)}]` : ''}`,
       debit: 0,
       credit: p.amount + (p.discount || 0),
       timestamp: new Date(p.createdAt).getTime()
@@ -153,11 +153,11 @@ export default function PartyLedger() {
       bal += tr.debit - tr.credit;
       text += `*${new Date(tr.date).toLocaleDateString()}*\n`;
       text += `${tr.desc}\n`;
-      if (tr.debit > 0) text += `Debit: ₹${tr.debit}\n`;
-      if (tr.credit > 0) text += `Credit: ₹${tr.credit}\n`;
-      text += `Balance: ₹${bal}\n\n`;
+      if (tr.debit > 0) text += `Debit: ₹${Number(tr.debit).toFixed(2)}\n`;
+      if (tr.credit > 0) text += `Credit: ₹${Number(tr.credit).toFixed(2)}\n`;
+      text += `Balance: ₹${Number(bal).toFixed(2)}\n\n`;
     });
-    text += `*Final Balance: ₹${bal}*`;
+    text += `*Final Balance: ₹${Number(bal).toFixed(2)}*`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     const a = document.createElement('a');
     a.href = url;
@@ -226,7 +226,7 @@ export default function PartyLedger() {
                 <div className="mb-2 flex justify-between border-b border-slate-100 dark:border-white/5 pb-2">
                   <span className="text-slate-500 dark:text-slate-400">{new Date(tr.date).toLocaleDateString()}</span>
                   <span className={cn("font-bold", runningBalance > 0 ? "text-amber-600 dark:text-amber-500" : runningBalance < 0 ? "text-emerald-600 dark:text-emerald-500" : "text-slate-500 dark:text-slate-400")}>
-                    {t.balance}: ₹{Math.abs(runningBalance)}
+                    {t.balance}: ₹{Math.abs(runningBalance).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-start mb-2">
@@ -241,8 +241,8 @@ export default function PartyLedger() {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-amber-600 dark:text-amber-400">{tr.debit > 0 ? `${t.debit}: ₹${tr.debit}` : ''}</span>
-                  <span className="text-emerald-600 dark:text-emerald-400">{tr.credit > 0 ? `${t.credit}: ₹${tr.credit}` : ''}</span>
+                  <span className="text-amber-600 dark:text-amber-400">{tr.debit > 0 ? `${t.debit}: ₹${Number(tr.debit).toFixed(2)}` : ''}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">{tr.credit > 0 ? `${t.credit}: ₹${Number(tr.credit).toFixed(2)}` : ''}</span>
                 </div>
               </div>
             );
