@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Package } from 'lucide-react';
 import { loginWithGoogle } from '../lib/firebase';
 import { translations } from '../i18n';
@@ -7,12 +7,15 @@ import { useStore } from '../store';
 export default function Login() {
   const { state } = useStore();
   const t = translations[state.language];
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   const handleLogin = async () => {
+    setErrorMsg('');
     try {
       await loginWithGoogle();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg(error?.message || 'Login failed');
     }
   };
 
@@ -30,6 +33,12 @@ export default function Login() {
             Sign in to manage your parties, job cards, and payments efficiently.
           </p>
         </div>
+
+        {errorMsg && (
+          <div className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
+            {errorMsg}
+          </div>
+        )}
 
         <button
           onClick={handleLogin}
