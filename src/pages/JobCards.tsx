@@ -94,7 +94,7 @@ export default function JobCards() {
                       <p className="text-base font-display font-bold text-slate-900 dark:text-white leading-tight">{partyName}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-center gap-1 bg-slate-50 dark:bg-white/5 rounded-full p-1 border border-slate-100 dark:border-white/5">
+                      <div className="md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 flex items-center gap-1 bg-slate-50 dark:bg-white/5 rounded-full p-1 border border-slate-100 dark:border-white/5">
                         <button onClick={() => handleEdit(card)} className="rounded-full p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10">
                           <Edit2 className="h-4 w-4" />
                         </button>

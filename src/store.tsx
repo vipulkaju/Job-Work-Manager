@@ -87,9 +87,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        unsubParties = handleSnapshot<Party>('parties', 'parties');
-        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        unsubPayments = handleSnapshot<Payment>('payments', 'payments', (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        unsubParties = handleSnapshot<Party>('parties', 'parties', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
+        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
+        unsubPayments = handleSnapshot<Payment>('payments', 'payments', (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
       } else {
         if (unsubParties) unsubParties();
         if (unsubJobCards) unsubJobCards();

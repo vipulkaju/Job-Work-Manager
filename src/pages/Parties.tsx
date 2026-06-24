@@ -108,7 +108,7 @@ export default function Parties() {
                     <span className={cn("text-lg font-display font-bold px-3 py-1 rounded-xl", balance > 0 ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-500 border border-amber-200/50 dark:border-amber-500/20" : balance < 0 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-500 border border-emerald-200/50 dark:border-emerald-500/20" : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-white/10")}>
                       ₹{Math.abs(balance)} <span className="text-[10px] tracking-wider uppercase opacity-80">{balance > 0 ? 'Dr' : balance < 0 ? 'Cr' : ''}</span>
                     </span>
-                    <div className="flex items-center gap-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-slate-50 dark:bg-white/5 rounded-full p-1 border border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-1 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 bg-slate-50 dark:bg-white/5 rounded-full p-1 border border-slate-100 dark:border-white/5">
                       <button onClick={(e) => { e.stopPropagation(); openPayment(party); }} className="rounded-full bg-emerald-100 dark:bg-emerald-500/20 p-2 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors shadow-sm" title={t.addPayment}>
                         <IndianRupee className="h-4 w-4" />
                       </button>
