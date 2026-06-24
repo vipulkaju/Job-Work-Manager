@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import firebaseConfigRaw from "../../firebase-applet-config.json";
 
@@ -16,12 +16,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with offline persistence
-export const db = initializeFirestore(
-  app, 
-  { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) },
-  firebaseConfigRaw.firestoreDatabaseId || undefined
-);
+// Initialize Firestore
+export const db = firebaseConfigRaw.firestoreDatabaseId 
+  ? getFirestore(app, firebaseConfigRaw.firestoreDatabaseId) 
+  : getFirestore(app);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
