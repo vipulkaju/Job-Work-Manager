@@ -1,0 +1,6 @@
+{
+  "name": "Job Work Manager",
+  "description": "Professional Textile Job Work Management Application with offline support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

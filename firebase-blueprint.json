@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "Party": {
+      "title": "Party",
+      "description": "A party entity.",
+      "type": "object",
+      "properties": {}
+    },
+    "JobCard": {
+      "title": "JobCard",
+      "description": "A job card entity.",
+      "type": "object",
+      "properties": {}
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "A payment entity.",
+      "type": "object",
+      "properties": {}
+    }
+  },
+  "firestore": {
+    "/parties/{partyId}": {
+      "schema": "Party",
+      "description": "Parties"
+    },
+    "/jobCards/{jobCardId}": {
+      "schema": "JobCard",
+      "description": "Job Cards"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payments"
+    }
+  }
+}
