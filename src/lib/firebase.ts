@@ -1,24 +1,27 @@
 import { initializeApp } from "firebase/app";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import firebaseConfigRaw from "../../firebase-applet-config.json";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAaKoiGdALerLQMms43Qex8uyVfb8O6qqg",
-  authDomain: "jobwork-87bd5.firebaseapp.com",
-  projectId: "jobwork-87bd5",
-  storageBucket: "jobwork-87bd5.firebasestorage.app",
-  messagingSenderId: "624256200279",
-  appId: "1:624256200279:web:2ee2b1f59af8d3327f7d12",
-  measurementId: "G-QPNWV2EX60"
+  apiKey: firebaseConfigRaw.apiKey,
+  authDomain: firebaseConfigRaw.authDomain,
+  projectId: firebaseConfigRaw.projectId,
+  storageBucket: firebaseConfigRaw.storageBucket,
+  messagingSenderId: firebaseConfigRaw.messagingSenderId,
+  appId: firebaseConfigRaw.appId,
+  measurementId: firebaseConfigRaw.measurementId,
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore with offline persistence
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
-});
+export const db = initializeFirestore(
+  app, 
+  { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) },
+  firebaseConfigRaw.firestoreDatabaseId || undefined
+);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -69,9 +69,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const handleSnapshot = <T extends { id: string }>(
       collectionName: string, 
       key: keyof AppState,
+      uid: string,
       sortFn?: (a: T, b: T) => number
     ) => {
-      const q = query(collection(db, collectionName), where("userId", "==", auth.currentUser?.uid));
+      const q = query(collection(db, collectionName), where("userId", "==", uid));
       return onSnapshot(q, (snapshot) => {
         if (!isSubscribed) return;
         const items = snapshot.docs.map(doc => doc.data() as T);
@@ -83,11 +84,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
     };
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        unsubParties = handleSnapshot<Party>('parties', 'parties', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        unsubPayments = handleSnapshot<Payment>('payments', 'payments', (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        // Migrate old local data if any
+        try {
+          const saved = localStorage.getItem('jobwork_db');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.parties && parsed.parties.length > 0) {
+              const batch = writeBatch(db);
+              parsed.parties.forEach((p: any) => batch.set(doc(db, 'parties', p.id), { ...p, userId: user.uid }));
+              if (parsed.jobCards) {
+                parsed.jobCards.forEach((c: any) => batch.set(doc(db, 'jobCards', c.id), { ...c, userId: user.uid }));
+              }
+              if (parsed.payments) {
+                parsed.payments.forEach((p: any) => batch.set(doc(db, 'payments', p.id), { ...p, userId: user.uid }));
+              }
+              await batch.commit();
+              
+              localStorage.setItem('jobwork_db', JSON.stringify({
+                language: parsed.language || 'gu',
+                theme: parsed.theme || 'dark'
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('Data migration error', e);
+        }
+
+        unsubParties = handleSnapshot<Party>('parties', 'parties', user.uid, (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        unsubJobCards = handleSnapshot<JobCard>('jobCards', 'jobCards', user.uid, (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        unsubPayments = handleSnapshot<Payment>('payments', 'payments', user.uid, (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       } else {
         if (unsubParties) unsubParties();
         if (unsubJobCards) unsubJobCards();
