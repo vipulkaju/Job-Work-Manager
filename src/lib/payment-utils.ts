@@ -9,7 +9,7 @@ export function getJobCardPaymentStatuses(jobCards: JobCard[], payments: Payment
     const discount = party?.discount || 0;
     const dalali = party?.dalali || 0;
 
-    const partyJCs = jobCards.filter(jc => jc.partyId === partyId).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const partyJCs = jobCards.filter(jc => jc.partyId === partyId && jc.status === 'Completed').sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const partyPayments = payments.filter(p => p.partyId === partyId);
     
     const jcPaidMap = new Map<string, number>();

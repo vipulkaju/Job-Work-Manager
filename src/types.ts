@@ -19,6 +19,7 @@ export type JobCard = {
   designName: string;
   quality: string;
   quantity: number;
+  shortage?: number;
   rate: number;
   amount: number;
   deliveryDate: string;

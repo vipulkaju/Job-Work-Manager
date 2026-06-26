@@ -32,7 +32,7 @@ export default function PartyLedger() {
   const transactions = useMemo(() => {
     if (!party) return [];
     
-    let jobCards = state.jobCards.filter(c => c.partyId === party.id);
+    let jobCards = state.jobCards.filter(c => c.partyId === party.id && c.status === 'Completed');
     let payments = (state.payments || []).filter(p => p.partyId === party.id);
 
     if (statusFilter !== 'All') {
@@ -56,11 +56,22 @@ export default function PartyLedger() {
     const jcTr = jobCards.map(c => {
       const discountAmt = Math.floor(c.amount * (party.discount || 0) / 100);
       const dalaliAmt = Math.floor(c.amount * (party.dalali || 0) / 100);
+      
       return {
         id: c.id,
         type: 'jobCard' as const,
         date: c.date,
-        desc: `Job Card #${c.cardNumber} (${c.designName})`,
+        jamaDate: c.deliveryDate || '',
+        designName: c.designName,
+        cardNumber: c.cardNumber,
+        quantity: c.quantity,
+        shortage: c.shortage || 0,
+        rate: c.rate,
+        amount: c.amount,
+        discountPercent: party.discount || 0,
+        discountAmt: discountAmt,
+        dalaliPercent: party.dalali || 0,
+        dalaliAmt: dalaliAmt,
         debit: c.amount - discountAmt - dalaliAmt,
         credit: 0,
         timestamp: new Date(c.createdAt).getTime()
@@ -71,7 +82,10 @@ export default function PartyLedger() {
       id: p.id,
       type: 'payment' as const,
       date: p.date,
-      desc: `Payment (${p.mode}) ${p.remark ? '- ' + p.remark : ''}${p.discount ? ` [Kasar: ₹${Number(p.discount).toFixed(2)}]` : ''}`,
+      mode: p.mode,
+      remark: p.remark,
+      kasar: p.discount || 0,
+      amount: p.amount,
       debit: 0,
       credit: p.amount + (p.discount || 0),
       timestamp: new Date(p.createdAt).getTime()
@@ -108,19 +122,58 @@ export default function PartyLedger() {
     let bal = 0;
     const tableData = transactions.map(tr => {
       bal += tr.debit - tr.credit;
+      let desc = '';
+      if (tr.type === 'jobCard') {
+        let details = `Qty: ${tr.quantity}`;
+        if (tr.shortage) details += `    Sort: ${tr.shortage}`;
+        details += `\nRate: ${tr.rate}    Amt: ${tr.amount}`;
+        if (tr.discountPercent) details += `\nDiscount: ${tr.discountPercent}% ( ${tr.discountAmt})`;
+        if (tr.dalaliPercent) details += `\nDalali: ${tr.dalaliPercent}% ( ${tr.dalaliAmt})`;
+        desc = `Job Card #${tr.cardNumber}\n(De.No. ${tr.designName})\nJama Date: ${tr.jamaDate ? new Date(tr.jamaDate).toLocaleDateString() : '-'}\n${details}`;
+      } else {
+        desc = `Payment (${tr.mode}) ${tr.remark ? '- ' + tr.remark : ''}${tr.kasar ? ` [Kasar: ₹${Number(tr.kasar).toFixed(2)}]` : ''}`;
+      }
       return [
         new Date(tr.date).toLocaleDateString(),
-        tr.desc,
-        tr.debit > 0 ? tr.debit.toString() : '',
-        tr.credit > 0 ? tr.credit.toString() : '',
-        bal.toString()
+        desc,
+        tr.debit > 0 ? Number(tr.debit).toFixed(2) : '',
+        tr.credit > 0 ? Number(tr.credit).toFixed(2) : '',
+        Number(bal).toFixed(2)
       ];
     });
+
+    const totalDebit = transactions.reduce((sum, tr) => sum + (tr.debit || 0), 0);
+    const totalCredit = transactions.reduce((sum, tr) => sum + (tr.credit || 0), 0);
+    
+    tableData.push([
+      '',
+      'TOTAL',
+      Number(totalDebit).toFixed(2),
+      Number(totalCredit).toFixed(2),
+      Number(bal).toFixed(2)
+    ]);
 
     autoTable(doc, {
       startY: fromDate || toDate ? 25 : 20,
       head: [['Date', 'Description', 'Debit', 'Credit', 'Balance']],
       body: tableData,
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 20, halign: 'right' },
+        3: { cellWidth: 20, halign: 'right' },
+        4: { cellWidth: 22, halign: 'right' },
+      },
+      didParseCell: (data) => {
+        if (data.section === 'head' && [2, 3, 4].includes(data.column.index)) {
+          data.cell.styles.halign = 'right';
+        }
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: 'linebreak'
+      }
     });
 
     doc.save(`${party.name}_ledger.pdf`);
@@ -130,15 +183,45 @@ export default function PartyLedger() {
     let bal = 0;
     const data = transactions.map(tr => {
       bal += tr.debit - tr.credit;
+      let desc = '';
+      if (tr.type === 'jobCard') {
+        let details = `Qty: ${tr.quantity}`;
+        if (tr.shortage) details += `    Sort: ${tr.shortage}`;
+        details += `\nRate: ${tr.rate}    Amt: ${tr.amount}`;
+        if (tr.discountPercent) details += `\nDiscount: ${tr.discountPercent}% ( ${tr.discountAmt})`;
+        if (tr.dalaliPercent) details += `\nDalali: ${tr.dalaliPercent}% ( ${tr.dalaliAmt})`;
+        desc = `Job Card #${tr.cardNumber}\n(De.No. ${tr.designName})\nJama Date: ${tr.jamaDate ? new Date(tr.jamaDate).toLocaleDateString() : '-'}\n${details}`;
+      } else {
+        desc = `Payment (${tr.mode}) ${tr.remark ? '- ' + tr.remark : ''}${tr.kasar ? ` [Kasar: ₹${Number(tr.kasar).toFixed(2)}]` : ''}`;
+      }
       return {
         Date: new Date(tr.date).toLocaleDateString(),
-        Description: tr.desc,
+        Description: desc,
         Debit: tr.debit || 0,
         Credit: tr.credit || 0,
         Balance: bal
       };
     });
+
+    const totalDebit = transactions.reduce((sum, tr) => sum + (tr.debit || 0), 0);
+    const totalCredit = transactions.reduce((sum, tr) => sum + (tr.credit || 0), 0);
+
+    data.push({
+      Date: '',
+      Description: 'TOTAL',
+      Debit: totalDebit,
+      Credit: totalCredit,
+      Balance: bal
+    });
+
     const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [
+      { wch: 12 }, // Date
+      { wch: 80 }, // Description
+      { wch: 12 }, // Debit
+      { wch: 12 }, // Credit
+      { wch: 15 }, // Balance
+    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ledger");
     XLSX.writeFile(wb, `${party.name}_ledger.xlsx`);
@@ -152,11 +235,26 @@ export default function PartyLedger() {
     transactions.forEach(tr => {
       bal += tr.debit - tr.credit;
       text += `*${new Date(tr.date).toLocaleDateString()}*\n`;
-      text += `${tr.desc}\n`;
+      let desc = '';
+      if (tr.type === 'jobCard') {
+        let details = `Qty: ${tr.quantity}`;
+        if (tr.shortage) details += `    Sort: ${tr.shortage}`;
+        details += `\nRate: ${tr.rate}    Amt: ${tr.amount}`;
+        if (tr.discountPercent) details += `\nDiscount: ${tr.discountPercent}% ( ${tr.discountAmt})`;
+        if (tr.dalaliPercent) details += `\nDalali: ${tr.dalaliPercent}% ( ${tr.dalaliAmt})`;
+        desc = `Job Card #${tr.cardNumber}\n(De.No. ${tr.designName})\nJama Date: ${tr.jamaDate ? new Date(tr.jamaDate).toLocaleDateString() : '-'}\n${details}`;
+      } else {
+        desc = `Payment (${tr.mode}) ${tr.remark ? '- ' + tr.remark : ''}${tr.kasar ? ` [Kasar: ₹${Number(tr.kasar).toFixed(2)}]` : ''}`;
+      }
+      text += `${desc}\n`;
       if (tr.debit > 0) text += `Debit: ₹${Number(tr.debit).toFixed(2)}\n`;
       if (tr.credit > 0) text += `Credit: ₹${Number(tr.credit).toFixed(2)}\n`;
       text += `Balance: ₹${Number(bal).toFixed(2)}\n\n`;
     });
+    const totalDebit = transactions.reduce((sum, tr) => sum + (tr.debit || 0), 0);
+    const totalCredit = transactions.reduce((sum, tr) => sum + (tr.credit || 0), 0);
+    text += `*Total Debit: ₹${Number(totalDebit).toFixed(2)}*\n`;
+    text += `*Total Credit: ₹${Number(totalCredit).toFixed(2)}*\n`;
     text += `*Final Balance: ₹${Number(bal).toFixed(2)}*`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     const a = document.createElement('a');
@@ -222,28 +320,64 @@ export default function PartyLedger() {
           transactions.map(tr => {
             runningBalance += tr.debit - tr.credit;
             return (
-              <div key={tr.id} className="rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1c2128] p-3 text-sm shadow-sm dark:shadow-none">
-                <div className="mb-2 flex justify-between border-b border-slate-100 dark:border-white/5 pb-2">
-                  <span className="text-slate-500 dark:text-slate-400">{new Date(tr.date).toLocaleDateString()}</span>
-                  <span className={cn("font-bold", runningBalance > 0 ? "text-amber-600 dark:text-amber-500" : runningBalance < 0 ? "text-emerald-600 dark:text-emerald-500" : "text-slate-500 dark:text-slate-400")}>
-                    {t.balance}: ₹{Math.abs(runningBalance).toFixed(2)}
-                  </span>
+              <div key={tr.id} className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white dark:bg-[#12141a] p-4 text-sm shadow-sm transition-all duration-300 hover:shadow-md">
+                <div className="mb-3 flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-medium">{new Date(tr.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t.balance}</span>
+                    <span className={cn("font-bold text-base", runningBalance > 0 ? "text-amber-600 dark:text-amber-500" : runningBalance < 0 ? "text-emerald-600 dark:text-emerald-500" : "text-slate-500 dark:text-slate-400")}>
+                      ₹{Math.abs(runningBalance).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-start mb-2">
-                  <p className="font-medium text-slate-900 dark:text-white flex-1">{tr.desc}</p>
-                  {tr.type === 'payment' && (
-                    <button 
-                      onClick={() => setDeleteConfirmId(tr.id)}
-                      className="ml-2 rounded-full p-1.5 text-red-500 dark:text-red-400 hover:bg-red-500/20"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-amber-600 dark:text-amber-400">{tr.debit > 0 ? `${t.debit}: ₹${Number(tr.debit).toFixed(2)}` : ''}</span>
-                  <span className="text-emerald-600 dark:text-emerald-400">{tr.credit > 0 ? `${t.credit}: ₹${Number(tr.credit).toFixed(2)}` : ''}</span>
-                </div>
+
+                {tr.type === 'jobCard' ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">#{tr.cardNumber} (De.No. {tr.designName})</h4>
+                        {tr.jamaDate && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Jama Date: {new Date(tr.jamaDate).toLocaleDateString()}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-y-4 gap-x-2 mt-4 bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                      <div className="flex flex-col"><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 opacity-70">Qty</span><span className="font-medium text-slate-900 dark:text-white">{tr.quantity}</span></div>
+                      <div className="flex flex-col"><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 opacity-70">Sort</span><span className="font-medium text-red-500 dark:text-red-400">{tr.shortage || 0}</span></div>
+                      <div className="flex flex-col"><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 opacity-70">Rate</span><span className="font-medium text-slate-900 dark:text-white">₹{tr.rate}</span></div>
+                      <div className="flex flex-col"><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 opacity-70">Discount</span><span className="font-medium text-slate-900 dark:text-white">{tr.discountPercent}% (₹{tr.discountAmt})</span></div>
+                      <div className="flex flex-col"><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 opacity-70">Dalali</span><span className="font-medium text-slate-900 dark:text-white">{tr.dalaliPercent}% (₹{tr.dalaliAmt})</span></div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
+                      <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Net Pramant</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-500 text-lg">₹{Number(tr.debit).toFixed(2)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">Payment ({tr.mode})</h4>
+                        {tr.remark && <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{tr.remark}</p>}
+                        {tr.kasar > 0 && <p className="text-sm font-medium text-amber-600 dark:text-amber-500 mt-1">Kasar: ₹{tr.kasar}</p>}
+                      </div>
+                      <button 
+                        onClick={() => setDeleteConfirmId(tr.id)}
+                        className="rounded-full p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
+                      <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Amount Received</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">₹{Number(tr.credit).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })

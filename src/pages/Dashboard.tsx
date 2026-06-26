@@ -12,7 +12,7 @@ export default function Dashboard() {
     const totalParties = state.parties.length;
     const totalJobCards = state.jobCards.length;
     const pendingDispatch = state.jobCards.filter(c => c.status === 'Completed').length;
-    const totalBilled = state.jobCards.reduce((acc, card) => {
+    const totalBilled = state.jobCards.filter(c => c.status === 'Completed').reduce((acc, card) => {
       const party = state.parties.find(p => p.id === card.partyId);
       const discountAmt = Math.floor(card.amount * (party?.discount || 0) / 100);
       const dalaliAmt = Math.floor(card.amount * (party?.dalali || 0) / 100);

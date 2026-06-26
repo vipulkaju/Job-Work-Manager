@@ -14,6 +14,7 @@ export default function JobCards() {
   const [editingCard, setEditingCard] = useState<JobCard | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [completingCard, setCompletingCard] = useState<JobCard | null>(null);
 
   const filteredCards = useMemo(() => state.jobCards.filter(c => 
     c.cardNumber.toLowerCase().includes(search.toLowerCase()) || 
@@ -44,10 +45,13 @@ export default function JobCards() {
   };
 
   const cycleStatus = (card: JobCard) => {
-    const statuses: JobCardStatus[] = ['Pending', 'In Process', 'Completed'];
-    const currentIndex = statuses.indexOf(card.status);
-    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-    updateJobCard({ ...card, status: nextStatus });
+    if (card.status === 'Pending') {
+      updateJobCard({ ...card, status: 'In Process' });
+    } else if (card.status === 'In Process') {
+      setCompletingCard(card);
+    } else if (card.status === 'Completed') {
+      updateJobCard({ ...card, status: 'Pending' });
+    }
   };
 
   return (
@@ -110,7 +114,7 @@ export default function JobCards() {
                         </button>
                       </div>
                       <a 
-                        href={`https://wa.me/?text=${encodeURIComponent(`*Job Card*: ${card.cardNumber}\n*Party*: ${partyName}\n*Design*: ${card.designName}\n*Qty*: ${card.quantity}\n*Amount*: ₹${Number(card.amount).toFixed(2)}\n*Status*: ${card.status}`)}`}
+                        href={`https://wa.me/?text=${encodeURIComponent(`${card.date ? new Date(card.date).toLocaleDateString() : ''}\nJob Card #${card.cardNumber}\n(De.No. ${card.designName})\nJama Date: ${card.deliveryDate ? new Date(card.deliveryDate).toLocaleDateString() : '-'}\nQty: ${card.quantity}    Sort: ${card.shortage || 0}\nRate: ${card.rate}    Amt: ${card.amount}\nDiscount: ${party?.discount || 0}% ( ${Math.floor(card.amount * (party?.discount || 0) / 100)})\nDalali: ${party?.dalali || 0}% ( ${Math.floor(card.amount * (party?.dalali || 0) / 100)})`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-500/20 shadow-sm"
@@ -131,32 +135,52 @@ export default function JobCards() {
                     </div>
                   </div>
                   
-                  <div className="mt-5 grid grid-cols-2 gap-y-4 gap-x-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                  <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
                     <div>
-                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">{t.designName}</span>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Date</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{new Date(card.date).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Jama Date</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{card.deliveryDate ? new Date(card.deliveryDate).toLocaleDateString() : '-'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">De.No.</span>
                       <span className="font-medium text-slate-900 dark:text-white">{card.designName}</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">{t.quality}</span>
-                      <span className="font-medium text-slate-900 dark:text-white">{card.quality || '-'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">{t.quantity}</span>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Qty</span>
                       <span className="font-medium text-slate-900 dark:text-white">{card.quantity}</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">{t.amount}</span>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-slate-900 dark:text-white">₹{Number(card.amount).toFixed(2)}</span>
-                        {pStatus && pStatus.status !== 'Unpaid' && (
-                          <span className={cn(
-                            "text-[10px] font-bold uppercase tracking-wider mt-0.5",
-                            pStatus.status === 'Paid' ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-500"
-                          )}>
-                            {pStatus.status === 'Paid' ? t.paid : `${t.partial} (₹${Number(pStatus.due).toFixed(2)})`}
-                          </span>
-                        )}
-                      </div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Sort</span>
+                      <span className="font-medium text-red-500 dark:text-red-400">{card.shortage || 0}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Rate</span>
+                      <span className="font-medium text-slate-900 dark:text-white">₹{card.rate}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Discount</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{party?.discount || 0}% (₹{Math.floor(card.amount * (party?.discount || 0) / 100)})</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-semibold uppercase tracking-wider mb-1 opacity-70">Dalali</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{party?.dalali || 0}% (₹{Math.floor(card.amount * (party?.dalali || 0) / 100)})</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-3">
+                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net Pramant</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-lg font-bold text-slate-900 dark:text-white">₹{Number(card.amount - Math.floor(card.amount * (party?.discount || 0) / 100) - Math.floor(card.amount * (party?.dalali || 0) / 100)).toFixed(2)}</span>
+                      {pStatus && pStatus.status !== 'Unpaid' && (
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider mt-0.5",
+                          pStatus.status === 'Paid' ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-500"
+                        )}>
+                          {pStatus.status === 'Paid' ? t.paid : `${t.partial} (₹${Number(pStatus.due).toFixed(2)})`}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -192,6 +216,73 @@ export default function JobCards() {
           </div>
         </div>
       )}
+
+      {completingCard && (
+        <CompleteJobCardForm 
+          card={completingCard}
+          onClose={() => setCompletingCard(null)}
+          onSave={(updatedCard) => {
+            updateJobCard(updatedCard);
+            setCompletingCard(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CompleteJobCardForm({ card, onClose, onSave }: { card: JobCard, onClose: () => void, onSave: (updated: JobCard) => void }) {
+  const [qty, setQty] = useState(card.quantity.toString());
+  const [shortage, setShortage] = useState('0');
+  const [rate, setRate] = useState(card.rate.toString());
+  const [deliveryDate, setDeliveryDate] = useState(card.deliveryDate || new Date().toISOString().split('T')[0]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedQty = parseFloat(qty) || 0;
+    const parsedShortage = parseFloat(shortage) || 0;
+    const finalQty = parsedQty - parsedShortage;
+    const finalRate = parseFloat(rate) || 0;
+    const finalAmount = Math.floor(finalQty * finalRate);
+    
+    onSave({
+      ...card,
+      quantity: parsedQty,
+      shortage: parsedShortage,
+      rate: finalRate,
+      amount: finalAmount,
+      deliveryDate: deliveryDate,
+      status: 'Completed'
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#12141a] p-6 shadow-2xl border border-slate-200 dark:border-white/10">
+        <h2 className="mb-6 text-xl font-bold text-slate-900 dark:text-white">Complete Job Card</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-400">Initial Quantity</label>
+            <input required type="number" step="0.01" value={qty} onChange={e => setQty(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-400">Sort (Shortage/Ghat)</label>
+            <input type="number" step="0.01" value={shortage} onChange={e => setShortage(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-400">Rate</label>
+            <input required type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-400">Jama Date</label>
+            <input required type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:outline-none" />
+          </div>
+          <div className="mt-4 flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 rounded-xl bg-slate-100 py-3 font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300 dark:border dark:border-white/10">Cancel</button>
+            <button type="submit" className="flex-1 rounded-xl bg-emerald-500 py-3 font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">Save & Complete</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -214,7 +305,8 @@ function JobCardModal({ onClose, onSave, initialCard, t, parties }: { onClose: (
     
     const qty = parseFloat(formData.quantity) || 0;
     const rate = parseFloat(formData.rate) || 0;
-    const baseAmount = Math.floor(qty * rate);
+    const shortage = initialCard?.shortage || 0;
+    const baseAmount = Math.floor((qty - shortage) * rate);
     let finalAmount = baseAmount;
     
     const selectedParty = parties.find(p => p.id === formData.partyId);

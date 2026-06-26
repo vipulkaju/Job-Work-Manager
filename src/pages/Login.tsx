@@ -20,7 +20,11 @@ export default function Login() {
       await loginWithGoogle();
     } catch (error: any) {
       console.error(error);
-      setErrorMsg(error?.message || 'Google login failed');
+      if (error?.code === 'auth/cancelled-popup-request' || error?.code === 'auth/popup-closed-by-user') {
+        setErrorMsg('Sign-in popup was cancelled. Please try again.');
+      } else {
+        setErrorMsg(error?.message || 'Google login failed');
+      }
     }
   };
 

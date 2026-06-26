@@ -85,7 +85,7 @@ export default function Parties() {
         ) : (
           <div className="flex flex-col gap-3">
             {filteredParties.map(party => {
-              const partyJobCards = state.jobCards.filter(c => c.partyId === party.id);
+              const partyJobCards = state.jobCards.filter(c => c.partyId === party.id && c.status === 'Completed');
               const partyPayments = (state.payments || []).filter(p => p.partyId === party.id);
               const totalBilled = partyJobCards.reduce((acc, c) => {
                 const discountAmt = Math.floor(c.amount * (party.discount || 0) / 100);
@@ -171,7 +171,7 @@ export default function Parties() {
 
 function PaymentModal({ party, onClose, onSave, t }: { party: Party, onClose: () => void, onSave: (p: Payment) => void, t: any }) {
   const { state } = useStore();
-  const partyJobCards = state.jobCards.filter(c => c.partyId === party.id).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const partyJobCards = state.jobCards.filter(c => c.partyId === party.id && c.status === 'Completed').sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const statuses = getJobCardPaymentStatuses(state.jobCards, state.payments || [], state.parties);
   
   const unpaidJobCards = partyJobCards.filter(jc => {
