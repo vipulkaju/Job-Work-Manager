@@ -16,10 +16,13 @@ export default function JobCards() {
   const [search, setSearch] = useState('');
   const [completingCard, setCompletingCard] = useState<JobCard | null>(null);
 
-  const filteredCards = useMemo(() => state.jobCards.filter(c => 
-    c.cardNumber.toLowerCase().includes(search.toLowerCase()) || 
-    c.designName.toLowerCase().includes(search.toLowerCase())
-  ), [state.jobCards, search]);
+  const filteredCards = useMemo(() => state.jobCards.filter(c => {
+    const partyName = state.parties.find(p => p.id === c.partyId)?.name || '';
+    const searchLower = search.toLowerCase();
+    return c.cardNumber.toLowerCase().includes(searchLower) || 
+           c.designName.toLowerCase().includes(searchLower) ||
+           partyName.toLowerCase().includes(searchLower);
+  }), [state.jobCards, state.parties, search]);
 
   const paymentStatuses = useMemo(() => getJobCardPaymentStatuses(state.jobCards, state.payments || [], state.parties), [state.jobCards, state.payments, state.parties]);
 
