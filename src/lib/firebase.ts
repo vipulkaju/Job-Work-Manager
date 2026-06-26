@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, browserPopupRedirectResolver } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, browserPopupRedirectResolver, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import firebaseConfigRaw from "../../firebase-applet-config.json";
 
 const firebaseConfig = {
@@ -23,6 +23,16 @@ export const db = firebaseConfigRaw.firestoreDatabaseId
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+export const loginWithEmail = async (email: string, pass: string) => {
+  const result = await signInWithEmailAndPassword(auth, email, pass);
+  return result.user;
+};
+
+export const registerWithEmail = async (email: string, pass: string) => {
+  const result = await createUserWithEmailAndPassword(auth, email, pass);
+  return result.user;
+};
 
 export const loginWithGoogle = async () => {
   try {
